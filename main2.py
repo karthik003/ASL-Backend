@@ -1,26 +1,33 @@
 import os
 import string
 import base64
+import subprocess
 import soundfile as sf
 import numpy as np
 import io
 import speech_recognition as sr
 import wave
+from pydub import AudioSegment
 
 # Function to convert audio to WAV format
-def convert_to_wav(input_file, output_file):
-    with sf.SoundFile(input_file) as audio_file:
-        audio_data = audio_file.read(dtype='int16')
-        samplerate = audio_file.samplerate
 
-    with wave.open(output_file, 'wb') as wav_file:
-        n_channels = 1
-        sampwidth = 2
-        n_frames = len(audio_data)
-        comptype = 'NONE'
-        compname = 'not compressed'
-        wav_file.setparams((n_channels, sampwidth, samplerate, n_frames, comptype, compname))
-        wav_file.writeframes(audio_data.tobytes())
+def convert_to_wav(input_file, output_file):
+    try:
+        # Construct the FFmpeg command for conversion
+        command = ['ffmpeg', '-i', input_file, output_file]
+
+        # Execute the command
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+
+        # Check if the output file was created successfully
+        if os.path.exists(output_file):
+            return output_file
+        else:
+            return None
+
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred while converting file: {e}")
+        return None
 
 def func(audio_file_path):
     # Convert the audio file to WAV format
@@ -81,7 +88,7 @@ def func(audio_file_path):
             for char in text:
                 if char in arr:
                     # Load and encode the image
-                    image_path = f"letters/{char}.jpg"
+                    image_path = f"ASL-Backend/letters/{char}.jpg"
                     with open(image_path, "rb") as image_file:
                         image_data = image_file.read()
                     image_base64 = base64.b64encode(image_data).decode("utf-8")
