@@ -3,12 +3,15 @@ import os
 import tempfile
 import base64
 from main2 import *
+from flask_cors import CORS
+
 app = Flask(__name__)
+CORS(app)
 
 PERMANENT_STORAGE_FOLDER = '/Users/karthik003/Desktop/External-Projects/ASL/ASL-Backend/audios'
 IMAGE_STORAGE_FOLDER = '/Users/karthik003/Desktop/External-Projects/ASL/ASL-Backend/responses'  # Update this path to where you want to save images
 
-@app.route('/speech-to-text', methods=['POST'])
+@app.route('/speech-to-image', methods=['POST'])
 def speech_to_text():
     if 'file' not in request.files:
         return jsonify({"error": "No file part in the request"}), 400
@@ -22,6 +25,16 @@ def speech_to_text():
 
     try:
         recognized_images = func(permanent_file_path)
+        save_images(recognized_images)
+        return jsonify({"recognized_images": recognized_images}), 200
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {e}"}), 500
+
+@app.route('/text-to-image', methods=['POST'])
+def text_to_image():
+    text = request.json['text']
+    try:
+        recognized_images = text_to_image_func(text)
         save_images(recognized_images)
         return jsonify({"recognized_images": recognized_images}), 200
     except Exception as e:
